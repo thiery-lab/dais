@@ -1,0 +1,17 @@
+name: dais
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - autograd
+  - ipython=7.15.0=py38h32f6830_0
+  - jax=0.1.70=py_0
+  - jaxlib=0.1.48=py38h32f6830_0
+  - matplotlib
+  - numpy=1.18.5
+  - pandas
+  - pip
+  - rpy2
+  - scipy
+  - pip:
+    - mici==0.1.5
