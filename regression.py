@@ -1,6 +1,6 @@
 """
 This script produces the figure for the logistic regression examples in
-van den Boom and Thiery (2022, in preparation).
+van den Boom and Thiery (2024, arXiv:2404.18556).
 """
 import pickle
 import time
