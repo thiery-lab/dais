@@ -43,11 +43,11 @@ def create_ellipse(mean, covariance, color_ellipse="red", linestyle="-"):
     )
 
 
-def plot_ellipse(µ, Σ, color="black", label="", linestyle="-"):
-    ax.scatter(µ[0], µ[1], c=color, s=20, label=label, zorder=10)
+def plot_ellipse(mu, Sigma, color="black", label="", linestyle="-"):
+    ax.scatter(mu[0], mu[1], c=color, s=20, label=label, zorder=10)
 
     ax.add_artist(create_ellipse(
-        µ, Σ, color_ellipse=color, linestyle=linestyle
+        mu, Sigma, color_ellipse=color, linestyle=linestyle
     ))
 
 
@@ -62,9 +62,9 @@ for ind in range(2):
     ## Define the log posterior density and its gradient.
     if ind == 0:
         print("Banana-shaped synthetic distribution")
-        Σ = np.array([[1, 0.9], [0.9, 1]])
-        Σ_inv = np.linalg.inv(Σ)
-        Σ_inv_onp = onp.asarray(Σ_inv)
+        Sigma = np.array([[1, 0.9], [0.9, 1]])
+        Sigma_inv = np.linalg.inv(Sigma)
+        Sigma_inv_onp = onp.asarray(Sigma_inv)
 
 
         def U_scalar(x):
@@ -75,7 +75,7 @@ for ind in range(2):
             Ruiz and Titsias (2019).
             """
             m = np.array([x[0], x[1] + x[0]*x[0] + 1])
-            return -0.5 * m @ Σ_inv @ m
+            return -0.5 * m @ Sigma_inv @ m
 
 
         def U_scalar_onp(x):
@@ -89,7 +89,7 @@ for ind in range(2):
             faster numerical integration.
             """
             m = onp.array([x[0], x[1] + x[0]*x[0] + 1])
-            return -0.5 * m @ Σ_inv_onp @ m
+            return -0.5 * m @ Sigma_inv_onp @ m
 
 
     else:  # Synthetic mixture distribution
@@ -98,21 +98,21 @@ for ind in range(2):
         mean = np.array([0.8, -2.0])
         n_cmpnt = len(weight)
 
-        Σ_onp = onp.array([
+        Sigma_onp = onp.array([
             [[1.0, 0.8], [0.8, 1.0]],
             [[1.0, -0.6], [-0.6, 1.0]],
         ])
 
-        Σ_inv_onp = onp.empty((n_cmpnt, d, d))
+        Sigma_inv_onp = onp.empty((n_cmpnt, d, d))
 
         for i in range(n_cmpnt):
-            Σ_inv_onp[i, :, :] = onp.linalg.inv(Σ_onp[i, :, :])
+            Sigma_inv_onp[i, :, :] = onp.linalg.inv(Sigma_onp[i, :, :])
 
-        Σ = np.asarray(Σ_onp)
-        Σ_inv = np.asarray(Σ_inv_onp)
+        Sigma = np.asarray(Sigma_onp)
+        Sigma_inv = np.asarray(Sigma_inv_onp)
 
         weight_det = weight / np.sqrt(np.array(
-            [np.linalg.det(Σ[i, :, :]) for i in range(n_cmpnt)]
+            [np.linalg.det(Sigma[i, :, :]) for i in range(n_cmpnt)]
         ))
 
         weight_det_onp = onp.asarray(weight_det)
@@ -128,7 +128,7 @@ for ind in range(2):
             m = np.array([x - mean[i] for i in range(n_cmpnt)])
             
             return np.log(np.sum(weight_det * np.array([
-                np.exp(-0.5 * m[i, :] @ Σ_inv[i, :, :] @ m[i, :])
+                np.exp(-0.5 * m[i, :] @ Sigma_inv[i, :, :] @ m[i, :])
                 for i in range(n_cmpnt)
             ])))
 
@@ -146,7 +146,7 @@ for ind in range(2):
             m_T = onp.subtract.outer(x, mean)
             
             return onp.log(onp.sum(weight_det_onp * onp.array([
-                onp.exp(-0.5 * m_T[:, i] @ Σ_inv_onp[i, :, :] @ m_T[:, i])
+                onp.exp(-0.5 * m_T[:, i] @ Sigma_inv_onp[i, :, :] @ m_T[:, i])
                 for i in range(n_cmpnt)
             ])))
 
@@ -155,19 +155,19 @@ for ind in range(2):
     # banana-shaped example as that is a too good importance sampling
     # proposal distribution resulting in DAIS uninterestingly finishing in
     # one interation.
-    Σ_init = np.identity(d) if ind == 1 else Σ
+    Sigma_init = np.identity(d) if ind == 1 else Sigma
     
     print("Running DAIS...")
 
-    µ_DAIS, Σ_DAIS = dais.DAIS(
-        U_scalar=U_scalar, S=10**5, S_eff_target=10**3, Σ=Σ_init
+    mu_DAIS, Sigma_DAIS = dais.DAIS(
+        U_scalar=U_scalar, S=10**5, S_eff_target=10**3, Sigma=Sigma_init
     )
 
     print("Running DAIS with lower sample size...")
 
-    µ_DAIS_ε, Σ_DAIS_ε = dais.DAIS(
+    mu_DAIS_ε, Sigma_DAIS_ε = dais.DAIS(
         U_scalar=U_scalar, S=10**3 + 10, max_iter = 400, S_eff_target=10**3,
-        Σ=Σ_init
+        Sigma=Sigma_init
     )
 
     print("Computing the mean and covariance using numerical integration...")
@@ -177,28 +177,28 @@ for ind in range(2):
     )
 
 
-    def π(x):
+    def pi(x):
         return onp.exp(U_scalar_onp(x)) / normalization_constant
 
 
-    µ_exact = onp.empty(d)
-    µ_exact[0] = integrate(lambda x0, x1: x0 * π([x0, x1]))
-    µ_exact[1] = integrate(lambda x0, x1: x1 * π([x0, x1]))
+    mu_exact = onp.empty(d)
+    mu_exact[0] = integrate(lambda x0, x1: x0 * pi([x0, x1]))
+    mu_exact[1] = integrate(lambda x0, x1: x1 * pi([x0, x1]))
 
-    Σ_exact = onp.empty((d, d))
+    Sigma_exact = onp.empty((d, d))
 
-    Σ_exact[0, 0] = integrate(
-        lambda x0, x1: (x0 - µ_exact[0]) * (x0 - µ_exact[0]) * π([x0, x1])
+    Sigma_exact[0, 0] = integrate(
+        lambda x0, x1: (x0 - mu_exact[0]) * (x0 - mu_exact[0]) * pi([x0, x1])
     )
 
-    Σ_exact[0, 1] = integrate(
-        lambda x0, x1: (x0 - µ_exact[0]) * (x1 - µ_exact[1]) * π([x0, x1])
+    Sigma_exact[0, 1] = integrate(
+        lambda x0, x1: (x0 - mu_exact[0]) * (x1 - mu_exact[1]) * pi([x0, x1])
     )
 
-    Σ_exact[1, 0] = Σ_exact[0, 1]
+    Sigma_exact[1, 0] = Sigma_exact[0, 1]
 
-    Σ_exact[1, 1] = integrate(
-        lambda x0, x1: (x1 - µ_exact[1]) * (x1 - µ_exact[1]) * π([x0, x1])
+    Sigma_exact[1, 1] = integrate(
+        lambda x0, x1: (x1 - mu_exact[1]) * (x1 - mu_exact[1]) * pi([x0, x1])
     )
 
     print("Running variational inference...")
@@ -207,36 +207,36 @@ for ind in range(2):
     U = jax.jit(jax.vmap(U_scalar))
 
 
-    # We parametrize Σ by its marginal variances and covariance such that x is
+    # We parametrize Sigma by its marginal variances and covariance such that x is
     # 5-dimensional.
-    def flatten(µ, Σ):
-        return np.concatenate((µ, np.diag(Σ), Σ[0, 1, np.newaxis]))
+    def flatten(mu, Sigma):
+        return np.concatenate((mu, np.diag(Sigma), Sigma[0, 1, np.newaxis]))
 
 
     def unflatten(x):
-        Σ = np.diag(x[2:4])
-        return x[:2], Σ.at[[[0, 1], [1, 0]]].set(x[4])
+        Sigma = np.diag(x[2:4])
+        return x[:2], Sigma.at[[[0, 1], [1, 0]]].set(x[4])
 
 
     def variational_objective(key, variational_params):
         """
         Stochastic estimate of the variational objective
         
-        The variational objective is D(Q || Π), the
+        The variational objective is D(Q || Pi), the
         Kullback-Leibler divergence from the target distribution
-        Π to the variational approximation Q = N(µ, Σ).
-        Π has as log density U plus some constant.
+        Pi to the variational approximation Q = N(mu, Sigma).
+        Pi has as log density U plus some constant.
         """
-        µ, Σ = unflatten(variational_params)
+        mu, Sigma = unflatten(variational_params)
 
         # We drop additive constants from the variational objective.
-        return -0.5*np.linalg.slogdet(Σ)[1] - np.mean(U(
-            jax.random.multivariate_normal(key=key, mean=µ, cov=Σ, shape=(1000,))
+        return -0.5*np.linalg.slogdet(Sigma)[1] - np.mean(U(
+            jax.random.multivariate_normal(key=key, mean=mu, cov=Sigma, shape=(1000,))
         ))
 
 
     def adam(
-        grad, µ, Σ, num_iters=100, step_size=0.001, b1=0.9, b2=0.999,
+        grad, mu, Sigma, num_iters=100, step_size=0.001, b1=0.9, b2=0.999,
         eps=10**-8, plot_trace=False, objective=None,
         rng=jax.random.PRNGKey(1)
     ):
@@ -253,7 +253,7 @@ for ind in range(2):
                     + "`True`."
             )
         
-        x = flatten(µ, Σ)
+        x = flatten(mu, Sigma)
         m = onp.zeros(len(x))
         v = onp.zeros(len(x))
         trace = onp.zeros(num_iters)
@@ -271,7 +271,7 @@ for ind in range(2):
             vhat = v / (1 - b2**(i + 1))
             x = x - step_size*mhat/(onp.sqrt(vhat) + eps)
             
-            # Ensure Σ's positive definiteness
+            # Ensure Sigma's positive definiteness
             x = x.at[2:3].set(max(x[2:3], 0))
             tmp = 0.99 * np.sqrt(x[2] * x[3])
             x = x.at[4].set(max(min(x[4], tmp), -tmp))
@@ -282,9 +282,9 @@ for ind in range(2):
         return unflatten(x)
 
 
-    µ_VI, Σ_VI = adam(
+    mu_VI, Sigma_VI = adam(
         grad=jax.jit(jax.grad(fun=variational_objective, argnums=1)),
-        µ=np.zeros(d), Σ=Σ_init, num_iters=200, step_size=0.01,
+        mu=np.zeros(d), Sigma=Sigma_init, num_iters=200, step_size=0.01,
         objective=jax.jit(variational_objective)
     )
 
@@ -296,18 +296,18 @@ for ind in range(2):
         num=200
     ), onp.linspace(start=-6.5 if ind == 0 else -6.0, stop=3.0, num=200)))
     
-    π_grid = onp.empty(x_grid.shape[1:3])
+    pi_grid = onp.empty(x_grid.shape[1:3])
 
     for i in range(x_grid.shape[1]):
         for j in range(x_grid.shape[2]):
-            π_grid[i,j] = π(x_grid[:,i,j])
+            pi_grid[i,j] = pi(x_grid[:,i,j])
 
 
-    for ind2 in range(2):  # Create separate figure for µ_DAIS_ε.
+    for ind2 in range(2):  # Create separate figure for mu_DAIS_ε.
         ax = plots[ind2][1][ind]
 
         ax.imshow(
-            X=-π_grid,  # The negative sign inverts the colors.
+            X=-pi_grid,  # The negative sign inverts the colors.
             cmap="gray",
             origin="lower",
             extent=[
@@ -320,15 +320,15 @@ for ind in range(2):
         ax.grid(True)
         ax.set(xlabel=r"$x_1$", ylabel=r"$x_2$")
 
-        plot_ellipse(µ_VI, Σ_VI, color="red", label="VI", linestyle="--")
+        plot_ellipse(mu_VI, Sigma_VI, color="red", label="VI", linestyle="--")
 
         plot_ellipse(
-            [µ_DAIS, µ_DAIS_ε][ind2], [Σ_DAIS, Σ_DAIS_ε][ind2], color="blue",
+            [mu_DAIS, mu_DAIS_ε][ind2], [Sigma_DAIS, Sigma_DAIS_ε][ind2], color="blue",
             label="DAIS", linestyle="-"
         )
 
         plot_ellipse(
-            µ_exact, Σ_exact, color="black", label="Exact", linestyle=":"
+            mu_exact, Sigma_exact, color="black", label="Exact", linestyle=":"
         )
 
         if ind == 0:

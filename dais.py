@@ -12,8 +12,8 @@ outer = jax.vmap(np.outer)  # Vectorized outer product
 
 
 def DAIS(
-    U_scalar, S=10**4, verbose=True, max_iter=10, S_eff_target=None, µ=None,
-    Σ=None, d=None, Stein_update=True
+    U_scalar, S=10**4, verbose=True, max_iter=10, S_eff_target=None, mu=None,
+    Sigma=None, d=None, Stein_update=True
 ):
     """
     Doubly adaptive importance sampling for a Gaussian approximation
@@ -35,7 +35,7 @@ def DAIS(
     `S_eff_target` is the guaranteed effective sample size which defaults to
     `S / 3.0`.
 
-    `µ` and `Σ` are the mean and covariance of the initial Gaussian
+    `mu` and `Sigma` are the mean and covariance of the initial Gaussian
     approximation. The default is a standard Gaussian.
 
     `d` is the dimensionality of the support of the target.
@@ -44,20 +44,20 @@ def DAIS(
     considered.
     """
     if d is None:
-        if µ is None:
-            if Σ is None:
-                raise ValueError("At least one of the arguments `µ`, `Σ` and "
+        if mu is None:
+            if Sigma is None:
+                raise ValueError("At least one of the arguments `mu`, `Sigma` and "
                     + "`d` has to be given.")
             else:
-                d = len(Σ)
+                d = len(Sigma)
         else:
-            d = len(µ)
+            d = len(mu)
 
-    if µ is None:
-        µ = np.zeros(d)
+    if mu is None:
+        mu = np.zeros(d)
     
-    if Σ is None:
-        Σ = np.identity(d)
+    if Sigma is None:
+        Sigma = np.identity(d)
 
     if S_eff_target is None:
         # Specify the effective sample size targeted by the tempering.
@@ -66,8 +66,8 @@ def DAIS(
     U = jax.jit(jax.vmap(U_scalar))
     grad_U = jax.jit(jax.vmap(jax.grad(U_scalar)))
     npr.seed(1)  # Set seed for reproducibility.
-    ε_prev = 0.0
-    ε_cum_prod = 1.0
+    eps_prev = 0.0
+    eps_cum_prod = 1.0
     check_convergence = False
     n_check = 5  # How many iterations to based the convergence check on
     diff_arr = onp.empty(n_check)
@@ -76,18 +76,18 @@ def DAIS(
         # Generate samples from the q_t.
         try:
             q_t = scipy.stats.multivariate_normal(
-                mean=µ, cov=Σ, allow_singular=True
+                mean=mu, cov=Sigma, allow_singular=True
             )
         except ValueError:
             warnings.warn(
-                "The new Σ is not positive semi-definite. "
-                    + "Therefore, resorting to the previous Σ."
+                "The new Sigma is not positive semi-definite. "
+                    + "Therefore, resorting to the previous Sigma."
             )
 
-            Σ = Σ_old
+            Sigma = Sigma_old
 
             q_t = scipy.stats.multivariate_normal(
-                mean=µ, cov=Σ, allow_singular=True
+                mean=mu, cov=Sigma, allow_singular=True
             )
         
         x_s = q_t.rvs(size=S)
@@ -102,29 +102,29 @@ def DAIS(
 
         # Check whether the effective sample size is large enough.
         # Otherwise, temper to achieve `S_eff_target`.
-        def weights(ε):
-            w = np.exp(ε * log_w)
+        def weights(eps):
+            w = np.exp(eps * log_w)
             return w / w.sum()
         
 
-        def S_eff(ε):
-            w = weights(ε)
+        def S_eff(eps):
+            w = weights(eps)
             return 1/np.sum(w * w) - S_eff_target
         
 
         if S_eff(1) >= 0:
-            ε = 1
+            eps = 1
         else:
-            ε = scipy.optimize.root_scalar(S_eff, bracket=[0, 1]).root
+            eps = scipy.optimize.root_scalar(S_eff, bracket=[0, 1]).root
         
         if verbose:
-            print("ε = % 0.5f" %ε)
+            print("eps = % 0.5f" %eps)
         
-        w = weights(ε)[:, np.newaxis]
-        µ_old, Σ_old = µ, Σ
+        w = weights(eps)[:, np.newaxis]
+        mu_old, Sigma_old = mu, Sigma
         
 
-        # Compute the new µ and Σ.
+        # Compute the new mu and Sigma.
         # We use Stein's lemma if that yields a reduction in Monte Carlo error.
         def MCSS(arg_s):
             """Compute the importance-weighted Monte Carlo sum of squares."""
@@ -134,44 +134,44 @@ def DAIS(
         
 
         if not Stein_update:
-            µ = (w * x_s).sum(axis=0)
+            mu = (w * x_s).sum(axis=0)
         else:
-            SS_regular, µ_regular = MCSS(x_s)
-            ε_Σ_grad_Φ_s = ε * (grad_U(x_s)@Σ + x_s - µ_old)
-            SS_Stein, diff_Stein = MCSS(ε_Σ_grad_Φ_s)
-            # µ = np.where(SS_regular < SS_Stein, µ_regular, µ + diff_Stein)
-            µ += diff_Stein
+            SS_regular, mu_regular = MCSS(x_s)
+            eps_Sigma_grad_phi_s = eps * (grad_U(x_s)@Sigma + x_s - mu_old)
+            SS_Stein, diff_Stein = MCSS(eps_Sigma_grad_phi_s)
+            # mu = np.where(SS_regular < SS_Stein, mu_regular, mu + diff_Stein)
+            mu += diff_Stein
 
-        m = x_s - µ
+        m = x_s - mu
 
         if Stein_update:
             SS_regular, _ = MCSS(m**2)
-            tmp = ε_Σ_grad_Φ_s + µ_old - µ
+            tmp = eps_Sigma_grad_phi_s + mu_old - mu
             SS_Stein, _ = MCSS(m * tmp)
 
         # if not Stein_update or SS_regular < SS_Stein:
         if not Stein_update: #or SS_regular < SS_Stein:
-            Σ = (w[:, :, np.newaxis] * outer(m, m)).sum(axis=0)
+            Sigma = (w[:, :, np.newaxis] * outer(m, m)).sum(axis=0)
         else:
-            E_x_grad_Φ_Σ = (w[:, :, np.newaxis] * outer(m, tmp)).sum(axis=0)
-            # `E_x_grad_Φ_Σ` is symmetric while our importance sampling
+            E_x_grad_phi_Sigma = (w[:, :, np.newaxis] * outer(m, tmp)).sum(axis=0)
+            # `E_x_grad_phi_Sigma` is symmetric while our importance sampling
             # estimate of it probably is not.
-            # We therefore symmetrize `E_x_grad_Φ_Σ`.
-            Σ += 0.5 * (E_x_grad_Φ_Σ + E_x_grad_Φ_Σ.T)
+            # We therefore symmetrize `E_x_grad_phi_Sigma`.
+            Sigma += 0.5 * (E_x_grad_phi_Sigma + E_x_grad_phi_Sigma.T)
         
-        if ε == 1.0:
+        if eps == 1.0:
             break
 
-        ε_cum_prod *= 1.0 - ε
+        eps_cum_prod *= 1.0 - eps
 
-        if ε < ε_prev and ε_cum_prod < 0.01:
+        if eps < eps_prev and eps_cum_prod < 0.01:
             check_convergence = True
 
         if check_convergence:
-            # Check convergence based on the mean absolute innovation of µ and
-            # the diagonal of Σ.
+            # Check convergence based on the mean absolute innovation of mu and
+            # the diagonal of Sigma.
             diff = np.abs(np.concatenate(
-                (µ - µ_old, np.diag(Σ) - np.diag(Σ_old))
+                (mu - mu_old, np.diag(Sigma) - np.diag(Sigma_old))
             )).mean()
 
             diff_arr[t % n_check] = diff
@@ -179,9 +179,9 @@ def DAIS(
             if diff > diff_arr.mean():
                 break
 
-        ε_prev = ε
+        eps_prev = eps
     
     if verbose:
-            print("DAIS finished in", t + 1, "iterations with ε =", ε)
+            print("DAIS finished in", t + 1, "iterations with eps =", eps)
 
-    return µ, Σ
+    return mu, Sigma
