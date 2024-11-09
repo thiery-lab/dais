@@ -28,7 +28,10 @@ in Section 2 to discuss the advantage of using Stein's identity and the
 monitoring of convergence.
 
 * [`environment.yml`](environment.yml) can be used to
-[create a conda environment] with which the code was tested.
+[create a conda environment] with which the code was tested. Note that some of
+the package versions are not available for Apple Silicon / osx-arm64. Instead,
+an osx-64 environment can be created on Apple Silicon Macs using
+`conda env create --platform osx-64 -f environment.yml`.
 
 
 [create a conda environment]: https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-from-an-environment-yml-file
