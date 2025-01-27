@@ -164,15 +164,15 @@ for data_name in data_sets.keys():
         fun=neg_log_dens, x0=np.zeros(d), jac=grad_neg_log_dens
     )['x']
 
-    Σ_init = np.linalg.inv(jax.hessian(neg_log_dens)(MAP))
+    Sigma_init = np.linalg.inv(jax.hessian(neg_log_dens)(MAP))
     time_print(times)
     
     print("\nRunning doubly adaptive importance sampling...")
     times = time_init()
     
-    data_sets[data_name]["µ_DAIS"], data_sets[data_name]["Σ_DAIS"] = dais.DAIS(
+    data_sets[data_name]["mu_DAIS"], data_sets[data_name]["Sigma_DAIS"] = dais.DAIS(
         U_scalar=U_scalar, S=data_sets[data_name]["S"], S_eff_target=10**3,
-        max_iter=50, µ=MAP, Σ=Σ_init
+        max_iter=50, mu=MAP, Sigma=Sigma_init
     )
     
     time_print(times)
@@ -208,9 +208,9 @@ for data_name in data_sets.keys():
     # Discard first 10% of samples as burnin.
     MCMC_history = chains['pos'][(MCMC_iter // 10):MCMC_iter]    
     
-    data_sets[data_name]["µ_MCMC"] = MCMC_history.mean(axis=0)
-    tmp = MCMC_history-data_sets[data_name]["µ_MCMC"]
-    data_sets[data_name]["Σ_MCMC"] = (tmp.T @ tmp) / MCMC_iter
+    data_sets[data_name]["mu_MCMC"] = MCMC_history.mean(axis=0)
+    tmp = MCMC_history-data_sets[data_name]["mu_MCMC"]
+    data_sets[data_name]["Sigma_MCMC"] = (tmp.T @ tmp) / MCMC_iter
 
 
 # Creating the figure:
@@ -235,14 +235,14 @@ for i, data_name in enumerate(data_sets.keys()):
     
 
     plot_results(
-        HMC_vals=data_sets[data_name]["µ_MCMC"],
-        DAIS_vals=data_sets[data_name]["µ_DAIS"], label="mean",
+        HMC_vals=data_sets[data_name]["mu_MCMC"],
+        DAIS_vals=data_sets[data_name]["mu_DAIS"], label="mean",
         ax=axes[int(i >= 2), 2*i % 4]
     )
     
     plot_results(
-        HMC_vals=np.sqrt(np.diag(data_sets[data_name]["Σ_MCMC"])),
-        DAIS_vals=np.sqrt(np.diag(data_sets[data_name]["Σ_DAIS"])),
+        HMC_vals=np.sqrt(np.diag(data_sets[data_name]["Sigma_MCMC"])),
+        DAIS_vals=np.sqrt(np.diag(data_sets[data_name]["Sigma_DAIS"])),
         label="standard deviation", ax=axes[int(i >= 2), (2*i + 1) % 4]
     )
 

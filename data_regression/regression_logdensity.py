@@ -5,7 +5,15 @@ import os
 
 def make_regression_logdensity(data_name):
     """ define the log density for the logistic regression problem
+    
+    input:
+    =====
     data_name: str, name of the data set \in {"spam", "krkp", "ionosphere", "mushroom"}
+    
+    output:
+    ======
+    log_dens: function, log density of the logistic regression problem
+    dim_covariates: int, dimension of the covariates
     """
     error_msg = "data_name not in the list of data sets"
     assert data_name in ["spam", "krkp", "ionosphere", "mushroom"], error_msg
@@ -40,9 +48,5 @@ def make_regression_logdensity(data_name):
         variance_x = 10.
         log_prior = -0.5*jnp.sum(x * x) / variance_x
         return log_likelihood(x) + log_prior
-
-    def neg_log_dens(x):
-        """Negative log posterior using `jax.numpy`."""
-        return -log_dens(x)
 
     return log_dens, dim_covariates

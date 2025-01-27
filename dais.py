@@ -132,7 +132,6 @@ def DAIS(
             SS = (w * (arg_s - empirical_mean)**2).sum()
             return SS, empirical_mean
         
-
         if not Stein_update:
             mu = (w * x_s).sum(axis=0)
         else:
