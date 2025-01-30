@@ -1,7 +1,7 @@
 """
 This script produces the figure for the logistic regression examples with
 variational inference in van den Boom, Cremaschi and Thiery
-(2024, arXiv:2404.18556).
+(2024, arXiv:2404.18556v1).
 """
 import pickle
 import time

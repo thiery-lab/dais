@@ -2,7 +2,7 @@
 
 Repository with code used for the paper "Doubly Adaptive Importance Sampling"
 by Willem van den Boom, Andrea Cremaschi and Alexandre H. Thiery
-(2024, [arXiv:2404.18556](https://arxiv.org/abs/2404.18556)).
+(2024, [arXiv:2404.18556v1](https://arxiv.org/abs/2404.18556v1)).
 
 
 ## Description of files
