@@ -1,6 +1,6 @@
 """
 This script produces the figure for the two-dimensional synthetic examples in
-van den Boom and Thiery (2024, arXiv:2404.18556).
+van den Boom, Cremaschi and Thiery (2024, arXiv:2404.18556).
 """
 import jax
 import jax.numpy as np

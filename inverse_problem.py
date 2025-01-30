@@ -1,6 +1,6 @@
- """
+"""
 This script produces the figure for the synthetic inverse problem in
-van den Boom and Thiery (2024, arXiv:2404.18556).
+van den Boom, Cremaschi and Thiery (2024, arXiv:2404.18556).
 """
 import matplotlib.pyplot as plt
 import autograd
