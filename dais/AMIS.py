@@ -147,9 +147,6 @@ class AMIS:
             cov_approx = jnp.cov(samples_all,
                                  rowvar=False,
                                  aweights=weights_all)    
-            
-            # TODO: add effective sample size check
-            # TODO: check that the covariance matrix is positive definite
                     
         dict_output = {
             'samples': samples_all,     # the final samples

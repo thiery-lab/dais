@@ -13,7 +13,8 @@ class OAIS:
     
     Reference:
     ----------
-    *** TODO ***
+    Akyildiz, O. D. and J. Míguez (2021). Convergence rates for optimised
+    adaptive importance samplers. Statistics and Computing 31 (2), 12.
     """
     def __init__(
                 self,
