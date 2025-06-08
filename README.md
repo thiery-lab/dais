@@ -11,22 +11,20 @@ by Willem van den Boom, Andrea Cremaschi and Alexandre H. Thiery
   adaptive importance sampling (DAIS) as well as other methods used for
   comparison. Other Python scripts import it.
 
-* [notebooks/control_variate.ipynb](notebooks/control_variate.ipynb) contains
+* [`notebooks/control_variate.ipynb`](notebooks/control_variate.ipynb) contains
   code for Figure 1 on the advantage of using Stein's identity.
 
-* [notebooks/banana_mixture.ipynb](notebooks/banana_mixture.ipynb) produces the
-  figures for the two-dimensional synthetic examples (Figure 2, S2 and S3).
+* [`notebooks/banana_mixture.ipynb`](notebooks/banana_mixture.ipynb) produces
+  the figures for the two-dimensional synthetic examples (Figure 2, S2 and S3).
 
 * [`notebooks/regression.ipynb`](notebooks/regression.ipynb) produces the
   figures for the logistic regression examples (Figure 3, S4 to S7, and S9).
   It reads in data from [`data_regression/`](`data_regression/`). It takes a
   bit longer to run, especially when the amount of RAM is less than 16GB.
 
-* [notebooks/convergence_banana.ipynb](notebooks/convergence_banana.ipynb) and
-  [notebooks/convergence_gaussian.ipynb]
-  (notebooks/convergence_gaussian.ipynb) contain code on monitoring of
-  convergence (Figure S1).
-
+* [`notebooks/convergence_banana.ipynb`](notebooks/convergence_banana.ipynb) and
+  [`notebooks/convergence_gaussian.ipynb`](notebooks/convergence_gaussian.ipynb)
+  contain code on monitoring of convergence (Figure S1).
 
 * [`environment.yml`](environment.yml) can be used to [create a conda
   environment] similar to the one with which the code was tested on Ubuntu.
